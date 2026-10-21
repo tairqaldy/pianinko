@@ -68,7 +68,8 @@ export function parseNotation(text: string): ParseResult {
       bpm = Number(tempo[1]);
       return;
     }
-    const voice = /^(RH|LH|R|L)\s*:/i.exec(line);
+    // "R:" / "L:" pick the hand; "r:0.5" at the start of a line is a rest, not a hand.
+    const voice = /^(RH|LH|R|L)\s*:(?!\s*[\d.])/i.exec(line);
     if (voice) {
       hand = voice[1].toUpperCase().startsWith('L') ? 'L' : 'R';
       line = line.slice(voice[0].length);
