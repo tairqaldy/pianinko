@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { INSTRUMENTS, type InstrumentId, type LoadState } from '../audio/engine.ts';
-import { BASE_OCTAVE_MAX, BASE_OCTAVE_MIN, LAYOUTS, type LayoutId } from '../lib/keymap.ts';
+import { LAYOUTS, octaveBounds, type LayoutId } from '../lib/keymap.ts';
 import type { LabelMode, Settings } from '../lib/storage.ts';
 import type { HandsChoice, Result } from '../player/player.ts';
 import { IconMinus, IconPlus } from './Icons.tsx';
@@ -106,15 +106,15 @@ export function SettingsPopover({ s, set, midiStatus, onConnectMidi, onHelp, onL
         <Seg<LayoutId> value={s.layout} options={LAYOUTS.map((l) => [l.id, l.name])} onChange={(v) => set('layout', v)} />
         <span className="setting__hint">{layout.hint}</span>
       </div>
-      {s.layout === 'rows' && (
+      {s.layout !== 'letters' && (
         <div className="setting__row">
-          Octave of Z key
+          {s.layout === 'piano' ? 'Octave of the Q key' : 'Octave of the Z key'}
           <span className="hints__group">
-            <button className="keycap keycap--btn" aria-label="Octave down" onClick={() => set('baseOctave', Math.max(BASE_OCTAVE_MIN, s.baseOctave - 1))}>
+            <button className="keycap keycap--btn" aria-label="Octave down" onClick={() => set('baseOctave', Math.max(octaveBounds(s.layout)[0], s.baseOctave - 1))}>
               <IconMinus size={12} />
             </button>
             <span className="setting__value">C{s.baseOctave}</span>
-            <button className="keycap keycap--btn" aria-label="Octave up" onClick={() => set('baseOctave', Math.min(BASE_OCTAVE_MAX, s.baseOctave + 1))}>
+            <button className="keycap keycap--btn" aria-label="Octave up" onClick={() => set('baseOctave', Math.min(octaveBounds(s.layout)[1], s.baseOctave + 1))}>
               <IconPlus size={12} />
             </button>
           </span>
@@ -219,6 +219,16 @@ const ROWS_MAP: { k: string; c: string }[][] = [
   [{ k: 'Z', c: 'w' }, { k: 'X', c: 'w' }, { k: 'C', c: 'w' }, { k: 'V', c: 'w' }, { k: 'B', c: 'w' }, { k: 'N', c: 'w' }, { k: 'M', c: 'w' }, { k: ',', c: 'w' }, { k: '.', c: 'w' }, { k: '/', c: 'w' }],
 ];
 
+const k = (keys: string, c: string) => [...keys].map((ch) => ({ k: ch, c }));
+
+/** Piano layout: Q row in the middle, A and Z rows going lower on the left and higher on the right. */
+const PIANO_MAP: { k: string; c: string }[][] = [
+  [{ k: '1', c: '' }, ...k('23', 'b'), { k: '4', c: '' }, ...k('567', 'b'), { k: '8', c: '' }, ...k('90', 'b'), { k: '-', c: '' }, { k: '=', c: 'b' }],
+  k('QWERTYUIOP[]\\', 'w'),
+  [...k('ASDFGHJ', 'lo'), ...k("KL;'", 'hi')],
+  [...k('ZXCVBNM', 'lo2'), ...k(',./', 'hi2')],
+];
+
 export function HelpModal({ layout, onClose }: { layout: LayoutId; onClose: () => void }) {
   return (
     <>
@@ -229,9 +239,11 @@ export function HelpModal({ layout, onClose }: { layout: LayoutId; onClose: () =
           <li>
             <span>
               <strong>Your keyboard is the piano.</strong>{' '}
-              {layout === 'rows'
-                ? 'The bottom letter row (Z to /) and the Q row are white keys. The row above each one holds the black keys, just like on a real piano. ← and → move everything an octave.'
-                : 'Every number and letter from 1 to M is a white key, low to high. Hold Shift for the black key above it.'}
+              {layout === 'piano'
+                ? 'The Q row is the middle of the piano and the numbers above it are its black keys. The A and Z rows reach outwards: their left side goes lower for your left hand, their right side goes higher. Shift + any letter plays the black key just above it. ← and → move everything an octave.'
+                : layout === 'rows'
+                  ? 'The bottom letter row (Z to /) and the Q row are white keys. The row above each one holds the black keys, just like on a real piano. ← and → move everything an octave.'
+                  : 'Every number and letter from 1 to M is a white key, low to high. Hold Shift for the black key above it.'}
             </span>
           </li>
           <li>
@@ -250,9 +262,9 @@ export function HelpModal({ layout, onClose }: { layout: LayoutId; onClose: () =
             </span>
           </li>
         </ol>
-        {layout === 'rows' && (
+        {layout !== 'letters' && (
           <div className="kbd-map" aria-label="Keyboard map: outlined keys are white piano keys, filled keys are black piano keys">
-            {ROWS_MAP.map((row, i) => (
+            {(layout === 'piano' ? PIANO_MAP : ROWS_MAP).map((row, i) => (
               <div className="kbd-map__row" key={i} style={{ paddingLeft: [0, 14, 22, 36][i] }}>
                 {row.map((cell) => (
                   <span key={cell.k} className={cell.c}>
@@ -261,6 +273,14 @@ export function HelpModal({ layout, onClose }: { layout: LayoutId; onClose: () =
                 ))}
               </div>
             ))}
+            {layout === 'piano' && (
+              <ul className="kbd-map__legend">
+                <li><i className="w" />Middle of the piano</li>
+                <li><i className="lo" />Lower, for your left hand</li>
+                <li><i className="hi" />Higher</li>
+                <li><i className="b" />Black keys, or Shift + letter</li>
+              </ul>
+            )}
           </div>
         )}
         <div className="row row--end">

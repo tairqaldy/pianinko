@@ -1410,6 +1410,57 @@ input[type='range']::-moz-range-thumb {
 .kbd-map__row span.x {
   visibility: hidden;
 }
+.kbd-map__row span.lo,
+.kbd-map__legend i.lo {
+  background: var(--sky);
+  border-color: var(--sky);
+  color: var(--ink);
+}
+.kbd-map__row span.lo2 {
+  background: #a6d1fb;
+  border-color: #a6d1fb;
+  color: var(--ink);
+}
+.kbd-map__row span.hi,
+.kbd-map__legend i.hi {
+  background: var(--bubblegum);
+  border-color: var(--bubblegum);
+  color: var(--ink);
+}
+.kbd-map__row span.hi2 {
+  background: #f9b9d3;
+  border-color: #f9b9d3;
+  color: var(--ink);
+}
+.kbd-map__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.kbd-map__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.kbd-map__legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+}
+.kbd-map__legend i.w {
+  background: var(--sheet);
+  border-color: var(--ink);
+}
+.kbd-map__legend i.b {
+  background: var(--ink);
+  border-color: var(--ink);
+}
 
 .toast {
   position: fixed;

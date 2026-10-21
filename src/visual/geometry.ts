@@ -8,11 +8,20 @@ export interface KeyRect {
   black: boolean;
 }
 
-/** Visible piano range for a given keyboard width: full 61 keys on desktop, fewer on phones. */
-export function visibleRange(width: number, baseMidi: number): [number, number] {
-  if (width >= 980) return [36, 96]; // C2–C7
-  if (width >= 640) return [Math.max(24, baseMidi - 12), Math.min(108, baseMidi + 36)];
-  return [baseMidi, Math.min(108, baseMidi + 24)];
+const downToC = (m: number) => m - (((m % 12) + 12) % 12);
+const upToC = (m: number) => (m % 12 === 0 ? m : downToC(m) + 12);
+
+/**
+ * Visible piano range: on desktop at least C2–C7 and always everything the layout can play;
+ * on smaller screens just the playable keys, and on phones the middle of them.
+ */
+export function visibleRange(width: number, playable: [number, number]): [number, number] {
+  const lo = downToC(playable[0]);
+  const hi = Math.min(108, upToC(playable[1]));
+  if (width >= 980) return [Math.min(36, lo), Math.max(96, hi)];
+  if (width >= 640) return [lo, hi];
+  const mid = downToC(Math.round((playable[0] + playable[1]) / 2));
+  return [mid - 12, mid + 12];
 }
 
 export function layoutKeys(lo: number, hi: number): Map<number, KeyRect> {

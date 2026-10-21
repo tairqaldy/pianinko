@@ -20,14 +20,16 @@ export interface Settings {
   freeBpm: number;
   songId: string | null;
   seenHelp: boolean;
+  /** Bumped when the default keyboard layout changes, so saved settings move to it once. */
+  kbVersion: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   instrument: 'piano',
   volume: 0.8,
   reverb: 0.25,
-  layout: 'rows',
-  baseOctave: 3,
+  layout: 'piano',
+  baseOctave: 4,
   labels: 'keys',
   prompter: true,
   mode: 'learn',
@@ -37,6 +39,7 @@ export const DEFAULT_SETTINGS: Settings = {
   freeBpm: 90,
   songId: 'twinkle-twinkle',
   seenHelp: false,
+  kbVersion: 2,
 };
 
 const KEY_SETTINGS = 'pianinko.settings.v1';
@@ -69,7 +72,16 @@ export const firstVisit = (() => {
   }
 })();
 
-export const loadSettings = (): Settings => ({ ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(KEY_SETTINGS, {}) });
+export const loadSettings = (): Settings => {
+  const saved = read<Partial<Settings>>(KEY_SETTINGS, {});
+  const s = { ...DEFAULT_SETTINGS, ...saved };
+  if (saved.kbVersion !== DEFAULT_SETTINGS.kbVersion) {
+    s.layout = DEFAULT_SETTINGS.layout;
+    s.baseOctave = DEFAULT_SETTINGS.baseOctave;
+    s.kbVersion = DEFAULT_SETTINGS.kbVersion;
+  }
+  return s;
+};
 export const saveSettings = (s: Settings) => write(KEY_SETTINGS, s);
 
 export const loadUserSongs = (): Song[] => read<Song[]>(KEY_SONGS, []);

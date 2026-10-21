@@ -4,8 +4,9 @@ A private little piano for the browser. Play it with your computer keyboard (or 
 
 ## What it does
 
-- **Play with your keyboard.** Two layouts:
-  - **Piano rows** (default): `Z X C V B N M , . /` and `Q W E R T Y U I O P [ ]` are white keys, the row above each holds the black keys, like a real piano. `←` `→` move the octave.
+- **Play with your keyboard.** Three layouts:
+  - **Piano** (default): the Q row (`Q` to `\`) is the middle of the piano, C4–A5, with its black keys on the number row above. The A and Z rows reach outwards: `A`–`J` is the octave below (C3–B3) and `Z`–`M` the one below that (C2–B2), for your left hand; `K L ; '` and `, . /` continue above the Q row (B5–A6). `Shift` + any letter plays the black key above it. `←` `→` move everything an octave.
+  - **Classic rows**: `Z`–`/` and `Q`–`]` are white keys, the row above each holds the black keys.
   - **Letter sheets**: `1` to `M` covers five octaves, `Shift` plays the black key. Matches virtualpiano.net sheets, so you can paste those straight in.
   - Keys are matched by physical position, so it works with any keyboard language switched on.
 - **Learn songs** in three modes:

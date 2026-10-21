@@ -5,7 +5,7 @@ import { IconChevron, IconMusic, IconPause, IconPlay, IconPrompter, IconRestart,
 import { Keyboard, KeyboardView } from './components/Keyboard.tsx';
 import { LibrarySheet, type LibraryTab } from './components/LibrarySheet.tsx';
 import { Teleprompter } from './components/Teleprompter.tsx';
-import { BASE_OCTAVE_MAX, BASE_OCTAVE_MIN, baseMidiFor, bestBaseOctave, codeToMidi, midiLabel, playableRange } from './lib/keymap.ts';
+import { bestBaseOctave, codeToMidi, defaultOctave, midiLabel, octaveBounds, playableRange } from './lib/keymap.ts';
 import { parseNotation } from './lib/notation.ts';
 import { midiToName, type Note, type Song } from './lib/notes.ts';
 import { LIBRARY } from './lib/songs.ts';
@@ -115,11 +115,16 @@ export default function App() {
     player.metronome = settings.metronome;
   }, [settings.metronome]);
 
-  // Rows layout: move the octave so the song's notes sit under your fingers.
+  // Move the octave so the song's notes sit under your fingers; a new layout starts at its home octave.
+  const prevLayout = useRef(settings.layout);
   useEffect(() => {
-    if (!song || settings.layout !== 'rows') return;
-    const mine = song.notes.filter((n) => settings.hands === 'both' || n.hand === settings.hands).map((n) => n.midi);
-    set('baseOctave', bestBaseOctave(mine));
+    const layoutChanged = prevLayout.current !== settings.layout;
+    prevLayout.current = settings.layout;
+    if (settings.layout === 'letters') return;
+    if (song) {
+      const mine = song.notes.filter((n) => settings.hands === 'both' || n.hand === settings.hands).map((n) => n.midi);
+      set('baseOctave', bestBaseOctave(mine, settings.layout));
+    } else if (layoutChanged) set('baseOctave', defaultOctave(settings.layout));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [song?.id, settings.hands, settings.layout]);
 
@@ -157,7 +162,7 @@ export default function App() {
     };
   }, [kb]);
 
-  const range = visibleRange(width, baseMidiFor(settings.baseOctave));
+  const range = visibleRange(width, playable);
   const keys = useMemo(() => layoutKeys(range[0], range[1]), [range[0], range[1]]);
   useEffect(() => skyRef.current?.setKeys(keys), [keys]);
   // Any state change may move the falling notes; ask the canvas for a frame.
@@ -324,12 +329,12 @@ export default function App() {
           return;
         case 'ArrowLeft':
         case 'ArrowRight':
-          if (s.layout !== 'rows') return;
+          if (s.layout === 'letters') return;
           e.preventDefault();
-          setSettings((st) => ({
-            ...st,
-            baseOctave: Math.max(BASE_OCTAVE_MIN, Math.min(BASE_OCTAVE_MAX, st.baseOctave + (e.code === 'ArrowLeft' ? -1 : 1))),
-          }));
+          setSettings((st) => {
+            const [min, max] = octaveBounds(st.layout);
+            return { ...st, baseOctave: Math.max(min, Math.min(max, st.baseOctave + (e.code === 'ArrowLeft' ? -1 : 1))) };
+          });
           return;
         case 'ArrowUp':
         case 'ArrowDown':
@@ -551,9 +556,11 @@ export default function App() {
             <div className={`sky__empty${played ? ' is-hidden' : ''}`}>
               <strong>Play something</strong>
               <span>
-                {settings.layout === 'rows'
-                  ? 'Press any key from Z to M or Q to P. The rows above them are the black keys. Hold Space to let notes ring.'
-                  : 'Press any number or letter key. Hold Shift for black keys, Space to let notes ring.'}
+                {settings.layout === 'piano'
+                  ? 'The Q row is the middle of the piano, the numbers above it are its black keys. A and Z rows go lower on the left and higher on the right. Shift + a letter plays its black key, Space lets notes ring.'
+                  : settings.layout === 'rows'
+                    ? 'Press any key from Z to M or Q to P. The rows above them are the black keys. Hold Space to let notes ring.'
+                    : 'Press any number or letter key. Hold Shift for black keys, Space to let notes ring.'}
               </span>
             </div>
           )}
@@ -580,15 +587,15 @@ export default function App() {
 
         <div className="hints">
           <div className="hints__group">
-            {settings.layout === 'rows' ? (
+            {settings.layout !== 'letters' ? (
               <>
-                <button className="keycap keycap--btn" onClick={() => set('baseOctave', Math.max(BASE_OCTAVE_MIN, settings.baseOctave - 1))} aria-label="Octave down">
+                <button className="keycap keycap--btn" onClick={() => set('baseOctave', Math.max(octaveBounds(settings.layout)[0], settings.baseOctave - 1))} aria-label="Octave down">
                   ←
                 </button>
                 <span className="hints__octave">
                   Keys {lowName} – {highName}
                 </span>
-                <button className="keycap keycap--btn" onClick={() => set('baseOctave', Math.min(BASE_OCTAVE_MAX, settings.baseOctave + 1))} aria-label="Octave up">
+                <button className="keycap keycap--btn" onClick={() => set('baseOctave', Math.min(octaveBounds(settings.layout)[1], settings.baseOctave + 1))} aria-label="Octave up">
                   →
                 </button>
               </>
