@@ -1,0 +1,13 @@
+node_modules
+dist
+.vercel
+.env*
+!.env.example
+*.log
+.DS_Store
+
+.vercel
+.env*
+
+# Private songs: deployed behind the access gate, never committed
+public/private/

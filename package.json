@@ -1,0 +1,27 @@
+{
+  "name": "pianinko",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A private little browser piano: play with your computer keyboard, learn songs with a teleprompter and falling notes.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.137.0",
+    "@tonejs/midi": "^2.0.28",
+    "@vercel/functions": "^3.10.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}
